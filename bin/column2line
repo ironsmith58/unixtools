@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+
+awk  '{ if (NF>0) {a[NR]=$0} } END{ for (i in a) { printf("%s ", a[i]) } printf("\n") }' "$@"
+
+
