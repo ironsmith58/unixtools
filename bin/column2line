@@ -1,6 +1,68 @@
 #!/bin/sh
 #
+# make sure we exit on error
+set -e
 
-awk  '{ if (NF>0) {a[NR]=$0} } END{ for (i in a) { printf("%s ", a[i]) } printf("\n") }' "$@"
+# set the version and revision
+progname="$(basename $0)"
+pversion='Revision: 1.0.0'
 
+usageversion () {
+        cat >&2 <<END
+Ironsmith Unix Tools $progname $pversion
+
+Usage: $progname  [options] [FILE]...
+Options:
+     -h,       --help        print this message
+     -s,       --single      surround the words with single quotes (')
+                             equivalent to --right="'" --left="'"
+     -q,       --quote       surround the words with double quotes (")
+                             equivalent to --right='"' --left='"'
+     -c,       --comma       seperate the words with commas (,)
+                             equivalent to --delim=", "
+     -d DELIM, --delim=DELIM set the delimiter between words to be DELIM
+                             string.  Default=single space
+     -l LEFT,  --left=LEFT   set the Left side surround to LEFT string
+     -r RIGHT, --right=RIGHT set the Right side surround to RIGHT string
+END
+}
+
+# We need TEMP as the `eval set --' would nuke the return value of getopt
+TEMP=$(getopt -a -o hqscd:l:r: -n "$progname" \
+	--long help,quote,single,comma,delimiter:left:right: -- "$@")
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+export LEFT=
+export RIGHT=
+export DELIM=" "
+
+while true ; do
+    case "$1" in
+        -h|--help) usageversion;     exit 0 ;;
+        -q|--quote) 
+	    LEFT='"'; RIGHT='"';     shift  ;;
+        -s|--single)
+            LEFT="'"; RIGHT="'";     shift ;;
+	-c|--comma)
+	    DELIM=", "                shift ;;
+        -d|--delimiter)
+            DELIM="$2";              shift 2 ;;
+        -l|--left)
+            LEFT="$2";               shift 2 ;;
+        -r|--right)
+            RIGHT="$2";              shift 2 ;;
+	--) shift;                   break ;;
+    esac
+done
+
+gawk  'BEGIN {
+	L=ENVIRON["LEFT"]
+	R=ENVIRON["RIGHT"]
+	D=ENVIRON["DELIM"]
+	#printf("Left=%s Right=%s Delim=%s\n", L, R, D)
+}
+{ if (NF>0) {a[NR]=$0} } 
+END{ for (i in a) { if (i==1) {printf("%s%s%s", L, a[i], R)} else {printf("%s%s%s%s", D, L, a[i], R)} } printf("\n") }' "$@"
 
