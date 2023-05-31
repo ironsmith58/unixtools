@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# make sure we exit on error
+set -e
+
+# set the version and revision
+progname="$(basename $0)"
+pversion='Revision: 1.0.0'
+
+usageversion () {
+        cat >&2 <<END
+Ironsmith Unix Tools $progname $pversion
+
+Usage: $progname  [options] [FILE]...
+Options:
+     -h,       --help        print this message
+END
+}
+
+# We need TEMP as the `eval set --' would nuke the return value of getopt
+TEMP=$(getopt -a -o h -n "$progname" \
+	--long help -- "$@")
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h|--help) usageversion;     exit 0 ;;
+	--) shift;                   break ;;
+    esac
+done
+
+cat "$@" | gawk '{ for(j=1; j<=NF; j++) { printf("%s\n", $j) }}'
+exit 0
+gawk  'BEGIN {
+	L=ENVIRON["LEFT"]
+	R=ENVIRON["RIGHT"]
+	D=ENVIRON["DELIM"]
+	#printf("Left=%s Right=%s Delim=%s\n", L, R, D)
+}
+{ if (NF>0) {a[NR]=$0} } 
+END{ for (i in a) { if (i==1) {printf("%s%s%s", L, a[i], R)} else {printf("%s%s%s%s", D, L, a[i], R)} } printf("\n") }' "$@"
+
