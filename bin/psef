@@ -1,0 +1,19 @@
+#!/bin/sh
+# a version of psef that only works on Linux/WSL
+
+if [ x"$1" = x"" ]; then
+	echo "usage: psef [-s] <regexp>"
+	echo
+	echo "-s    include rss and vsz in the output"
+	exit 1
+fi
+
+FORMAT="pid,ppid,time"
+if [ $1 = "-s" ]; then
+	FORMAT=$FORMAT",rss,vsz"
+	shift
+fi
+FORMAT=$FORMAT",user,cmd"
+
+
+ps -o $FORMAT  -ax | grep -E "PID|$1" | grep -v "grep.*$1" | grep -v "psef.*$1"
