@@ -2,15 +2,19 @@
 usage()
 {
 	cat <<EOF
-usage: now [+- timedelta]
+usage: now [-timedelta|+timedelta]...
 
-now show the current system tine in seconds since the Unix epoch (1970-01-01)
+now shows the current system tine in seconds since the Unix epoch (1970-01-01)
 
-a timedelta can be be provided as an optional parameter to add or subtract
+A timedelta can be be provided as an optional parameter to add or subtract
 from now.
 
-the timedelta can be given time units as a alphabetic suffix to easily subtract hours or days. suffixes
-can be provided as upper or lower case.
+A time delta is an integer or floating point number, preceded by a sign, and optionally
+suffixed with a time unit.
+
+The timedelta can be given time units as an alphabetic suffix to easily subtract 
+hours or days. Suffixes are case-insensitive.  Intermediate timedelta can be
+created by providing multiple deltas.
 
 suffixes supported:
 	S - seconds # same as no suffix
@@ -27,6 +31,8 @@ Examples:
 	$ now +1d  # add 24 hours to the current time
 
 	$ now      # show current time
+
+	$ now -4d +1h # show current time 3 days and 23 hours ago
 EOF
 }
 
@@ -34,7 +40,7 @@ function optionvalue
 {
 	f=1 # units to seconds factor
 	# remove sign char, this always returns the absolute value
-	d=$( echo $2| sed 's/[-+]//' )
+	d=$( echo $1| sed 's/[-+]//' )
 	case $d in
 		*s|*S)
 			f=1;;
@@ -58,14 +64,29 @@ then
 	usage
 	exit 0
 fi
-delta=0
-if [[ $1 == -* ]]
+
+debug="true"
+if [[ $1 == -d ]]
 then
-	delta=-$( optionvalue - $1 )
-elif [[ $1 == +* ]]
-then
-	delta=$( optionvalue - $1 )
+	debug="echo"
+	shift
 fi
+
+$debug processing command line $*
+delta=0
+for d in $*
+do
+	case $d in 
+		-*) 
+			td=$( optionvalue $d )
+			$debug delta $d '=>' $td
+			delta=$(( delta - td ));;
+		+*|[0-9]*) 
+			td=$( optionavalue $d )
+			$debug delta $d '=>' $td
+			delta=$(( delta +  td ));;
+	esac
+done
 
 
 now=$(date +%s)
