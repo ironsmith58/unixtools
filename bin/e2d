@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+
+import sys
+import datetime as DT
+
+if len(sys.argv[1:]) == 0:
+	print("e2d requires at least 1 argument")
+	sys.exit(1)
+
+if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+	print('''usage: e2d unix_timestamp...
+
+e2d converts the unix_timestamp to an ISO format datetime and prints the result
+
+	unix_timestamp may be repeated multiple times
+''')
+	sys.exit(0)
+
+
+if len(sys.argv[1:]) == 1:
+	t = DT.datetime.utcfromtimestamp(float(sys.argv[1])).isoformat()
+	print(t)
+else:
+	for ts in sys.argv[1:]:
+		t = DT.datetime.utcfromtimestamp(float(t)).isoformat()
+		print(ts, t)
+
