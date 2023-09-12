@@ -1,0 +1,73 @@
+#!/usr/bin/bash
+usage()
+{
+	cat <<EOF
+usage: now [+- timedelta]
+
+now show the current system tine in seconds since the Unix epoch (1970-01-01)
+
+a timedelta can be be provided as an optional parameter to add or subtract
+from now.
+
+the timedelta can be given time units as a alphabetic suffix to easily subtract hours or days. suffixes
+can be provided as upper or lower case.
+
+suffixes supported:
+	S - seconds # same as no suffix
+	M - minutes
+	H - hours
+	D - days
+	W - weeks
+
+Examples:
+	$ now -15  # subtract 15 seconds from the current time
+
+	$ now -1d  # subtract 24 hours from the current time
+
+	$ now +1d  # add 24 hours to the current time
+
+	$ now      # show current time
+EOF
+}
+
+function optionvalue
+{
+	f=1 # units to seconds factor
+	# remove sign char, this always returns the absolute value
+	d=$( echo $2| sed 's/[-+]//' )
+	case $d in
+		*s|*S)
+			f=1;;
+		*m|*M)
+			f=60;;
+		*h|*H)
+			f=3600;;
+		*d|*D) 
+			f=86400;;
+		*w|*W)
+			f=$((86400*7));;
+	esac
+	# remove any suffix
+	d=$( echo $d | sed 's/[sSmMhHdDwW].*$//' )
+	echo $(( d * f ))
+}
+
+
+if [[ $1 == -h || $1 == --help ]]
+then
+	usage
+	exit 0
+fi
+delta=0
+if [[ $1 == -* ]]
+then
+	delta=-$( optionvalue - $1 )
+elif [[ $1 == +* ]]
+then
+	delta=$( optionvalue - $1 )
+fi
+
+
+now=$(date +%s)
+
+echo $(( $now + $delta ))
