@@ -1,0 +1,100 @@
+#!/bin/python3
+
+"""Read comdb2 output and construct an RDB file
+
+Use Cases:
+
+cdb2sql testdb localhost "select * from DATA where id between 1 and 100" | comdb2_to_rdb
+
+
+converts out put like;
+(first_name='eric', last_name='fredrickson', userid=1004, sequence=1, balance=100.000000, paydate="2023-09-13T191826.331 America/New_York", autoid=x'cd0fbf395a8f4584b861c00bbe80cc33')
+(first_name='fredrick', last_name='samualson', userid=1008, sequence=2, balance=100.000000, paydate="2023-09-13T191901.072 America/New_York", autoid=x'921adfdf72b0401bbc4ca9a692f59d7b')
+(first_name='kurt', last_name='samualson', userid=1009, sequence=3, balance=100.000000, paydate="2023-09-13T191948.209 America/New_York", autoid=x'7fb8e230ee5e4b3a894f3b2136301571')
+(first_name='kurt', last_name='finkelson', userid=1019, sequence=4, balance=100.000000, paydate="2023-09-13T192142.822 America/New_York", autoid=x'4abecc61412a4150a0bc94dec470d70c')
+(first_name='frieda', last_name='finkeldotter', userid=1018, sequence=5, balance=100.000000, paydate="2023-09-13T192224.845 America/New_York", autoid=x'03e01d51d5284e38ba7590c5889194bc')
+
+
+and outputs a RDB header created from the column_names and rows from each row of output
+
+"""
+
+
+import os
+import sys
+import tempfile
+import subprocess
+
+Input=""
+CloseInput=False
+
+if len(sys.argv) == 1:
+    # use stdin so this works as a filter	
+    Input=sys.stdin
+    CloseInput=False
+elif len(sys.argv) == 2:
+    Input = open(sys.argv[1], "r")
+    CloseInput=True
+else:
+    print("too many options:", sys.argv[1:], file=sys.stderr)
+    sys.exit(1)
+
+
+def get_header(line):
+    # return an array of values from a line of comdb2 output
+    values = line.split(",")
+    for j, val in enumerate(values):
+        v = val.split("=")
+        val = v[0].replace("'", "").replace("(", "").strip()
+        values[j] = val
+    return values
+
+
+def get_values(line):
+    # return an array of values from a line of comdb2 output
+    values = line.split(",")
+    for j, val in enumerate(values):
+        v = val.split("=")
+        val = v[1].replace("'", "").replace(")", "").strip()
+        values[j] = val
+    return values
+
+
+def cat(fn):
+    # catenate a file to stdout
+    with open(fn) as infile:
+        while line := infile.readline():
+            print(line.strip())
+
+
+
+Header=False
+
+
+fd, tempfilename = tempfile.mkstemp(text=True)
+tmp = os.fdopen(fd, "w")
+
+while line := Input.readline():
+    if not Header:
+        h = get_header(line)
+        print("\t".join(h), file=tmp)
+        Header=True
+    v = get_values(line)
+    print("\t".join(v), file=tmp)
+tmp.close()
+
+try:
+    subprocess.run(["repair","-blank", tempfilename])
+except FileNotFoundError:
+    print("RDB repair command not found in path", file=sys.stderr)
+else:
+    # the repaair command create a file suffixed with '.rdb' in the local directory
+    rdbname=os.path.basename(tempfilename) + ".rdb"
+    cat(rdbname)
+    os.remove(rdbname)
+
+os.remove(tempfilename)
+
+if CloseInput:
+    Input.close()
+
