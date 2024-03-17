@@ -84,7 +84,7 @@ while line := Input.readline():
 tmp.close()
 
 try:
-    subprocess.run(["repair","-blank", tempfilename])
+    subprocess.run(["repair","-blank", tempfilename], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 except FileNotFoundError:
     print("RDB repair command not found in path", file=sys.stderr)
 else:
