@@ -10,7 +10,7 @@ A set of tools that I have been carrying around for a decade or two.
 - e2d         - unix epoch time to a date time, e.g.
 - now         - this instants datetime as a unix epoch, has simple subtraction/addition of hours,
               minutes, seconds, days, weeks
-- psef        - runs 'ps -ef | grep RE' where RE is supplie don the command line
+- psef        - runs 'ps -ef | grep RE' where RE is supplied on the command line
 
 
 - comdb2_to_rdb - special filter that converts the output from cdb2sql to an RDB format printed to stdout
