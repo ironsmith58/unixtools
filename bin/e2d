@@ -22,6 +22,6 @@ if len(sys.argv[1:]) == 1:
 	print(t)
 else:
 	for ts in sys.argv[1:]:
-		t = DT.datetime.utcfromtimestamp(float(t)).isoformat()
+		t = DT.datetime.utcfromtimestamp(float(ts)).isoformat()
 		print(ts, t)
 
