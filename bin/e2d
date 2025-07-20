@@ -17,11 +17,7 @@ e2d converts the unix_timestamp to an ISO format datetime and prints the result
 	sys.exit(0)
 
 
-if len(sys.argv[1:]) == 1:
-	t = DT.datetime.utcfromtimestamp(float(sys.argv[1])).isoformat()
-	print(t)
-else:
-	for ts in sys.argv[1:]:
-		t = DT.datetime.utcfromtimestamp(float(ts)).isoformat()
-		print(ts, t)
+for ts in sys.argv[1:]:
+    t = DT.datetime.fromtimestamp(float(ts), DT.UTC)
+    print(ts, t)
 
